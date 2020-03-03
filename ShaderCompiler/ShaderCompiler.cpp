@@ -127,7 +127,6 @@ void TryCreateDirectory(string& path)
 }
 int main()
 {
-
 	string cmd;
 	string sonCmd;
 	string results;

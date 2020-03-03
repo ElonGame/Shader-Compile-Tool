@@ -28,15 +28,13 @@ void DirectCompile::UpdateCommand()
 {
 	commands.clear();
 	string fileName;
-	string resultName;
 	cout << "Please Input the source shader file name: " << endl;
 	cin >> fileName;
-	cout << "Plase Input the destnation shader file name: " << endl;
-	cin >> resultName;
+
 	Command c;
 	c.filePath = path;
 	c.fileName = fileName;
-	c.resultFileName = resultName;
+
 	c.isDebug = isDebug;
 RE_CHOOSE_TYPE:
 	cout << "What Type of Shader is it? " << endl;
@@ -49,18 +47,23 @@ RE_CHOOSE_TYPE:
 		string vs, ps;
 		cout << "Please input the Vertex Shader Name: " << endl;
 		cin >> vs;
-		cout << "Plase input the PS Shader Name: " << endl;
-		cin >> ps;
-		
+		cout << "Please input the Vertex Shader destnation name: " << endl;
+		cin >> c.resultFileName;
 		c.shaderType = ShaderType::VertexShader;
 		c.functionName = vs;
 		commands.push_back(c);
+		cout << "Plase input the PS Shader Name: " << endl;
+		cin >> ps;
+		cout << "Please input the Pixel Shader destnation name: " << endl;
+		cin >> c.resultFileName;
 		c.shaderType = ShaderType::PixelShader;
 		c.functionName = ps;
 		commands.push_back(c);
 	}
 	else if (type[0] == '1')//Compute
 	{
+		cout << "Plase Input the destnation shader file name: " << endl;
+		cin >> c.resultFileName;
 		string cs;
 		cout << "Please input the kernel names, input \"0\" for end" << endl;
 		c.shaderType = ShaderType::ComputeShader;
