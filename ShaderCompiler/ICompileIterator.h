@@ -11,14 +11,13 @@ enum class ShaderType : uint16_t
 	DomainShader = 4,
 	GeometryShader = 5
 };
+
 struct Command
 {
-	std::string filePath;
 	std::string fileName;
-	std::string functionName;
-	std::string resultFileName;
-	ShaderType shaderType;
+	std::string propertyFileName;
 	bool isDebug;
+	bool isCompute;
 };
 class ICompileIterator
 {

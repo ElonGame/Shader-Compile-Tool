@@ -1,12 +1,13 @@
 #pragma once
 #include "ICompileIterator.h"
-
-class DirectCompile : public ICompileIterator
+class BatchCompile : public ICompileIterator
 {
-	bool isDebug;
+private:
 	std::vector<Command> commands;
+	bool isDebug;
+	std::string lookUpFilePath;
 public:
-	DirectCompile();
+	BatchCompile();
 	virtual void UpdateCommand();
 	virtual std::vector<Command>& GetCommand();
 };

@@ -24,6 +24,18 @@
     <ClCompile Include="StringUtility.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="CJsonObject\cJSON.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CJsonObject\CJsonObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderUniforms.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BatchCompile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ICompileIterator.h">
@@ -33,6 +45,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="StringUtility.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CJsonObject\cJSON.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CJsonObject\CJsonObject.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx12.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderUniforms.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchCompile.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,6 +144,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,13 +154,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BatchCompile.cpp" />
+    <ClCompile Include="CJsonObject\cJSON.c" />
+    <ClCompile Include="CJsonObject\CJsonObject.cpp" />
     <ClCompile Include="DirectCompile.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
+    <ClCompile Include="ShaderUniforms.cpp" />
     <ClCompile Include="StringUtility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BatchCompile.h" />
+    <ClInclude Include="CJsonObject\cJSON.h" />
+    <ClInclude Include="CJsonObject\CJsonObject.hpp" />
+    <ClInclude Include="d3dx12.h" />
     <ClInclude Include="DirectCompile.h" />
     <ClInclude Include="ICompileIterator.h" />
+    <ClInclude Include="ShaderUniforms.h" />
     <ClInclude Include="StringUtility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

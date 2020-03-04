@@ -2,10 +2,6 @@
 using namespace std;
 DirectCompile::DirectCompile()
 {
-	cout << "Choose a Directory Path:" << endl;
-	cin >> path;
-	if (!path.empty() && (path[path.length() - 1] != '/' || path[path.length() - 1] != '\\'))
-		path += '\\';
 RE_CHOOSE:
 	cout << "Release Or Debug? Y for Release & N for Debug" << endl;
 	string s;
@@ -32,9 +28,9 @@ void DirectCompile::UpdateCommand()
 	cin >> fileName;
 
 	Command c;
-	c.filePath = path;
 	c.fileName = fileName;
-
+	cout << "Please Input the source property file name: " << endl;
+	cin >> c.propertyFileName;
 	c.isDebug = isDebug;
 RE_CHOOSE_TYPE:
 	cout << "What Type of Shader is it? " << endl;
@@ -44,41 +40,15 @@ RE_CHOOSE_TYPE:
 	cin >> type;
 	if (type[0] == '0')//VS
 	{
-		string vs, ps;
-		cout << "Please input the Vertex Shader Name: " << endl;
-		cin >> vs;
-		cout << "Please input the Vertex Shader destnation name: " << endl;
-		cin >> c.resultFileName;
-		c.shaderType = ShaderType::VertexShader;
-		c.functionName = vs;
-		commands.push_back(c);
-		cout << "Plase input the PS Shader Name: " << endl;
-		cin >> ps;
-		cout << "Please input the Pixel Shader destnation name: " << endl;
-		cin >> c.resultFileName;
-		c.shaderType = ShaderType::PixelShader;
-		c.functionName = ps;
-		commands.push_back(c);
+		c.isCompute = false;
 	}
 	else if (type[0] == '1')//Compute
 	{
-		cout << "Plase Input the destnation shader file name: " << endl;
-		cin >> c.resultFileName;
-		string cs;
-		cout << "Please input the kernel names, input \"0\" for end" << endl;
-		c.shaderType = ShaderType::ComputeShader;
-		string kernelName;
-		cin >> kernelName;
-		while (!(kernelName.length() >= 1 && kernelName[0] == '0'))
-		{
-			c.functionName = kernelName;
-			commands.push_back(c);
-			cin >> kernelName;
-		}
+		c.isCompute = true;
 	}
 	else
 	{
 		goto RE_CHOOSE_TYPE;
 	}
-
+	commands.push_back(c);
 }
