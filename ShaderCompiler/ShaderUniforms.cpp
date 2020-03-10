@@ -138,8 +138,6 @@ namespace SCompile
 		passes.reserve(20);
 		ifstream ifs(path);
 		if (!ifs) return;
-		char c[256];
-		string s;
 		static string rwtex = "RWT";
 		static string rwstr = "RWS";
 		static string cbuffer = "cbuffer";
@@ -155,15 +153,11 @@ namespace SCompile
 		static string conservative = "conservative";
 		static string blend = "blend";
 		std::vector<string> commands;
-		s.reserve(256);
-
-
-		while (true)
+		std::vector<string> lines;
+		ReadLines(ifs, lines);
+		for (auto i = lines.begin(); i != lines.end(); ++i)
 		{
-
-			ifs.getline(c, 255);
-			if (strlen(c) == 0) return;
-			s = c;
+			string& s = *i;
 			ShaderVariable sv;
 			sv.tableSize = 1;
 			if (GetFirstIndexOf(s, rwtex) == 0)	//RWTexture
@@ -209,11 +203,9 @@ namespace SCompile
 					auto ztest = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 					auto cullmode = D3D12_CULL_MODE_BACK;
 					bool conservativeMode = false;
-					while (true)
+					for (; i != lines.end(); ++i)
 					{
-						ifs.getline(c, 255);
-						if (strlen(c) == 0) break;
-						s = c;
+						string& s = *i;
 						if (GetFirstIndexOf(s, endPragma) == 0)
 						{
 							p.blendState = GetBlendState(alpha);
@@ -225,8 +217,10 @@ namespace SCompile
 						Split(s, ' ', commands);
 						if (commands.size() >= 2)
 						{
+							ToLower(commands[0]);
 							if (commands[0] == zTest)
 							{
+								ToLower(commands[1]);
 								if (commands[1] == "less")
 								{
 									ztest = D3D12_COMPARISON_FUNC_LESS;
@@ -251,7 +245,7 @@ namespace SCompile
 								{
 									ztest = D3D12_COMPARISON_FUNC_NOT_EQUAL;
 								}
-								else if (commands[1] == "always")
+								else if (commands[1] == "always" || commands[1] == "off")
 								{
 									ztest = D3D12_COMPARISON_FUNC_ALWAYS;
 								}
@@ -262,17 +256,19 @@ namespace SCompile
 							}
 							else if (commands[0] == zWrite)
 							{
-								if (commands[1] == "on")
+								ToLower(commands[1]);
+								if (commands[1] == "on" || commands[1] == "always")
 								{
 									zwrite = true;
 								}
-								else if (commands[1] == "off")
+								else if (commands[1] == "off" || commands[1] == "never")
 								{
 									zwrite = false;
 								}
 							}
 							else if (commands[0] == Cull)
 							{
+								ToLower(commands[1]);
 								if (commands[1] == "back")
 								{
 									cullmode = D3D12_CULL_MODE_BACK;
@@ -281,7 +277,7 @@ namespace SCompile
 								{
 									cullmode = D3D12_CULL_MODE_FRONT;
 								}
-								else if (commands[1] == "off")
+								else if (commands[1] == "off" || commands[1] == "never")
 								{
 									cullmode = D3D12_CULL_MODE_NONE;
 								}
@@ -296,16 +292,19 @@ namespace SCompile
 							}
 							else if (commands[0] == conservative)
 							{
-								if (commands[1] == "on")
+								ToLower(commands[1]);
+								if (commands[1] == "on" || commands[1] == "always")
 									conservativeMode = true;
-								else if (commands[1] == "off")
+								else if (commands[1] == "off" || commands[1] == "never")
 									conservativeMode = false;
 							}
 							else if (commands[0] == blend)
 							{
-								if (commands[1] == "on")
+								ToLower(commands[1]);
+								if (commands[1] == "on" || commands[1] == "always")
 									alpha = true;
-								else alpha = false;
+								else if(commands[1] == "off" || commands[1] == "never")
+									alpha = false;
 							}
 						}
 					}
@@ -322,8 +321,7 @@ namespace SCompile
 		passes.reserve(20);
 		ifstream ifs(path);
 		if (!ifs) return;
-		char c[256];
-		string s;
+
 		static string rwtex = "RWT";
 		static string rwstr = "RWS";
 		static string cbuffer = "cbuffer";
@@ -331,16 +329,11 @@ namespace SCompile
 		static string str = "Str";
 		static string pragma = "#pragma";
 		string kernelName;
-		//string endpragma = "#end";
-		s.reserve(256);
-
-
-		while (true)
+		vector<string> lines;
+		ReadLines(ifs, lines);
+		for (auto i = lines.begin(); i != lines.end(); ++i)
 		{
-
-			ifs.getline(c, 255);
-			if (strlen(c) == 0) return;
-			s = c;
+			string& s = *i;
 			ComputeShaderVariable sv;
 			sv.tableSize = 1;
 			if (GetFirstIndexOf(s, rwtex) == 0)	//RWTexture

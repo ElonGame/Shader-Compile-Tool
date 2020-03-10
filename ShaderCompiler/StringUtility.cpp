@@ -1,8 +1,10 @@
 #include "StringUtility.h"
-using namespace std; void IndicesOf(const string& str, const string& sign, vector<int>& v)
+using namespace std; 
+void IndicesOf(const string& str, const string& sign, vector<int>& v)
 {
-	int count = str.length() - sign.length() + 1;
 	v.clear();
+	if (str.empty()) return;
+	int count = str.length() - sign.length() + 1;
 	v.reserve(10);
 	for (int i = 0; i < count; ++i)
 	{
@@ -22,8 +24,8 @@ using namespace std; void IndicesOf(const string& str, const string& sign, vecto
 
 void IndicesOf(const std::string& str, char sign, std::vector<int>& v)
 {
-	int count = str.length();
 	v.clear();
+	int count = str.length();
 	v.reserve(10);
 	for (int i = 0; i < count; ++i)
 	{
@@ -32,6 +34,69 @@ void IndicesOf(const std::string& str, char sign, std::vector<int>& v)
 			v.push_back(i);
 		}
 	}
+}
+
+void CutToLine(const char* str, int64_t size, std::vector<std::string>& lines)
+{
+	lines.clear();
+	lines.reserve(32);
+	string buffer;
+	buffer.reserve(32);
+	for (size_t i = 0; i < size; ++i)
+	{
+		if (str[i] == '\0') break;
+		if (!(str[i] == '\n' || str[i] == '\r'))
+		{
+			buffer.push_back(str[i]);
+		}
+		else
+		{
+			if (str[i] == '\n' || (str[i] == '\r' && i < size - 1 && str[i + 1] == '\n'))
+			{
+				if (!buffer.empty())
+					lines.push_back(buffer);
+				buffer.clear();
+			}
+		}
+	}
+	if (!buffer.empty())
+		lines.push_back(buffer);
+}
+
+void CutToLine(const std::string& str, std::vector<std::string>& lines)
+{
+	lines.clear();
+	lines.reserve(32);
+	string buffer;
+	buffer.reserve(32);
+	for (size_t i = 0; i < str.length(); ++i)
+	{
+		if (!(str[i] == '\n' || str[i] == '\r'))
+		{
+			buffer.push_back(str[i]);
+		}
+		else
+		{
+			if (str[i] == '\n' || (str[i] == '\r' && i < str.length() - 1 && str[i + 1] == '\n'))
+			{
+				if(!buffer.empty())
+					lines.push_back(buffer);
+				buffer.clear();
+			}
+		}
+	}
+	if (!buffer.empty())
+		lines.push_back(buffer);
+}
+
+void ReadLines(std::ifstream& ifs, std::vector<std::string>& lines)
+{
+	ifs.seekg(0, ios::end);
+	int64_t size = ifs.tellg();
+	ifs.seekg(0, ios::beg);
+	vector<char> buffer(size + 1);
+	ifs.read(buffer.data(), size);
+	CutToLine(buffer.data(), size, lines);
 }
 
 int GetFirstIndexOf(const std::string& str, char sign)
@@ -170,5 +235,34 @@ int StringToInteger(const std::string& str)
 			value += (int)str[i] - 48;
 		}
 		return value;
+	}
+}
+inline constexpr void mtolower(char& c)
+{
+	if ((c >= 'A') && (c <= 'Z'))
+		c = c + ('a' - 'A');
+}
+inline constexpr void mtoupper(char& c)
+{
+	if ((c >= 'a') && (c <= 'z'))
+		c = c + ('A' - 'a');
+}
+
+void ToLower(std::string& str)
+{
+	char* c = str.data();
+	const uint size = str.length();
+	for (uint i = 0; i < size; ++i)
+	{
+		mtolower(c[i]);
+	}
+}
+void ToUpper(std::string& str)
+{
+	char* c = str.data();
+	const uint size = str.length();
+	for (uint i = 0; i < size; ++i)
+	{
+		mtoupper(c[i]);
 	}
 }
