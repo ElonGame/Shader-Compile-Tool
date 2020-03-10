@@ -38,7 +38,16 @@ namespace SCompile
 		}
 	}
 
-	D3D12_DEPTH_STENCIL_DESC GetDepthState(bool zwrite, D3D12_COMPARISON_FUNC compareFunc)
+	D3D12_STENCIL_OP GetStencilOP(const std::string& str)
+	{
+		D3D12_STENCIL_OP op = D3D12_STENCIL_OP_KEEP;
+		if (str == "zero") op = D3D12_STENCIL_OP_ZERO;
+		else if (str == "replace") op = D3D12_STENCIL_OP_REPLACE;
+		return op;
+	}
+
+	D3D12_DEPTH_STENCIL_DESC GetDepthState(bool zwrite, D3D12_COMPARISON_FUNC compareFunc, uint8_t readmask, uint8_t writemask,
+		D3D12_STENCIL_OP sFail, D3D12_STENCIL_OP zFail, D3D12_STENCIL_OP pass, D3D12_COMPARISON_FUNC sComp)
 	{
 		D3D12_DEPTH_STENCIL_DESC dsDesc;
 		if (!zwrite && compareFunc == D3D12_COMPARISON_FUNC_ALWAYS)
@@ -53,11 +62,22 @@ namespace SCompile
 		}
 
 		dsDesc.DepthFunc = compareFunc;
-		dsDesc.StencilEnable = FALSE;
-		dsDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
-		dsDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+		if (
+			sFail == D3D12_STENCIL_OP_KEEP &&
+			zFail == D3D12_STENCIL_OP_KEEP &&
+			pass == D3D12_STENCIL_OP_KEEP &&
+			sComp == D3D12_COMPARISON_FUNC_ALWAYS)
+		{
+			dsDesc.StencilEnable = FALSE;
+		}
+		else
+		{
+			dsDesc.StencilEnable = TRUE;
+		}
+		dsDesc.StencilReadMask = readmask;
+		dsDesc.StencilWriteMask = writemask;
 		const D3D12_DEPTH_STENCILOP_DESC defaultStencilOp =
-		{ D3D12_STENCIL_OP_KEEP, D3D12_STENCIL_OP_KEEP, D3D12_STENCIL_OP_KEEP, D3D12_COMPARISON_FUNC_ALWAYS };
+		{ sFail, zFail, pass, sComp };
 		dsDesc.FrontFace = defaultStencilOp;
 		dsDesc.BackFace = defaultStencilOp;
 		return dsDesc;
@@ -90,7 +110,7 @@ namespace SCompile
 		{
 			GetDataFromAttribute(s, data);
 			if (!data.empty())
-				count = StringToInteger(data);
+				count = StringToInt(data);
 		}
 		GetDataFromBrackets(s, data);
 		int tIndices = GetFirstIndexOf(data, registerType);
@@ -103,7 +123,7 @@ namespace SCompile
 				regisStr.push_back(data[i]);
 			}
 			if (!regisStr.empty())
-				regis = StringToInteger(regisStr);
+				regis = StringToInt(regisStr);
 			else regis = 0;
 		}
 		regisStr.clear();
@@ -115,7 +135,7 @@ namespace SCompile
 				regisStr.push_back(data[i]);
 			}
 			if (!regisStr.empty())
-				space = StringToInteger(regisStr);
+				space = StringToInt(regisStr);
 		}
 		tIndices = GetFirstIndexOf(s, ' ');
 		name.clear();
@@ -128,6 +148,40 @@ namespace SCompile
 				name.push_back(s[i]);
 			}
 		}
+	}
+
+	D3D12_COMPARISON_FUNC GetComparison(const std::string& str)
+	{
+		D3D12_COMPARISON_FUNC ztest = D3D12_COMPARISON_FUNC_ALWAYS;
+		if (str == "less")
+		{
+			ztest = D3D12_COMPARISON_FUNC_LESS;
+		}
+		else if (str == "lequal")
+		{
+			ztest = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		}
+		else if (str == "greater")
+		{
+			ztest = D3D12_COMPARISON_FUNC_GREATER;
+		}
+		else if (str == "gequal")
+		{
+			ztest = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+		}
+		else if (str == "equal")
+		{
+			ztest = D3D12_COMPARISON_FUNC_EQUAL;
+		}
+		else if (str == "nequal")
+		{
+			ztest = D3D12_COMPARISON_FUNC_NOT_EQUAL;
+		}
+		else if (str == "never")
+		{
+			ztest = D3D12_COMPARISON_FUNC_NEVER;
+		}
+		return ztest;
 	}
 
 	void GetShaderRootSigData(const string& path, vector<ShaderVariable>& vars, vector<PassDescriptor>& passes)
@@ -152,6 +206,13 @@ namespace SCompile
 		static string zTest = "ztest";
 		static string conservative = "conservative";
 		static string blend = "blend";
+		static string stencilFail = "stencil_fail";
+		static string stencilZFail = "stencil_zfail";
+		static string stencilpass = "stencil_pass";
+		static string stencilcomp = "stencil_comp";
+		static string stencilreadmask = "stencil_readmask";
+		static string stencilwritemask = "stencil_writemask";
+
 		std::vector<string> commands;
 		std::vector<string> lines;
 		ReadLines(ifs, lines);
@@ -203,13 +264,19 @@ namespace SCompile
 					auto ztest = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 					auto cullmode = D3D12_CULL_MODE_BACK;
 					bool conservativeMode = false;
+					uint8_t readmask = 255;
+					uint8_t writemask = 255;
+					D3D12_STENCIL_OP sFail = D3D12_STENCIL_OP_KEEP;
+					D3D12_STENCIL_OP zFail = D3D12_STENCIL_OP_KEEP;
+					D3D12_STENCIL_OP pass = D3D12_STENCIL_OP_KEEP;
+					D3D12_COMPARISON_FUNC sComp = D3D12_COMPARISON_FUNC_ALWAYS;
 					for (; i != lines.end(); ++i)
 					{
 						string& s = *i;
 						if (GetFirstIndexOf(s, endPragma) == 0)
 						{
 							p.blendState = GetBlendState(alpha);
-							p.depthStencilState = GetDepthState(zwrite, ztest);
+							p.depthStencilState = GetDepthState(zwrite, ztest, readmask, writemask, sFail, zFail, pass, sComp);
 							p.rasterizeState = GetCullState(cullmode, conservativeMode);
 							passes.push_back(p);
 							break;
@@ -221,38 +288,7 @@ namespace SCompile
 							if (commands[0] == zTest)
 							{
 								ToLower(commands[1]);
-								if (commands[1] == "less")
-								{
-									ztest = D3D12_COMPARISON_FUNC_LESS;
-								}
-								else if (commands[1] == "lequal")
-								{
-									ztest = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-								}
-								else if (commands[1] == "greater")
-								{
-									ztest = D3D12_COMPARISON_FUNC_GREATER;
-								}
-								else if (commands[1] == "gequal")
-								{
-									ztest = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-								}
-								else if (commands[1] == "equal")
-								{
-									ztest = D3D12_COMPARISON_FUNC_EQUAL;
-								}
-								else if (commands[1] == "nequal")
-								{
-									ztest = D3D12_COMPARISON_FUNC_NOT_EQUAL;
-								}
-								else if (commands[1] == "always" || commands[1] == "off")
-								{
-									ztest = D3D12_COMPARISON_FUNC_ALWAYS;
-								}
-								else if (commands[1] == "never")
-								{
-									ztest = D3D12_COMPARISON_FUNC_NEVER;
-								}
+								ztest = GetComparison(commands[1]);
 							}
 							else if (commands[0] == zWrite)
 							{
@@ -303,8 +339,36 @@ namespace SCompile
 								ToLower(commands[1]);
 								if (commands[1] == "on" || commands[1] == "always")
 									alpha = true;
-								else if(commands[1] == "off" || commands[1] == "never")
+								else if (commands[1] == "off" || commands[1] == "never")
 									alpha = false;
+							}
+							else if (GetFirstIndexOf(commands[0], "stencil_") == 0)
+							{
+								ToLower(commands[1]);
+								if (commands[0] == stencilreadmask)
+								{
+									readmask = (uint8_t)StringToInt(commands[1]);
+								}
+								else if (commands[0] == stencilwritemask)
+								{
+									writemask = (uint8_t)StringToInt(commands[1]);
+								}
+								else if (commands[0] == stencilcomp)
+								{
+									sComp = GetComparison(commands[1]);
+								}
+								else if (commands[0] == stencilZFail)
+								{
+									zFail = GetStencilOP(commands[1]);
+								}
+								else if (commands[0] == stencilFail)
+								{
+									sFail = GetStencilOP(commands[1]);
+								}
+								else if (commands[0] == stencilpass)
+								{
+									pass = GetStencilOP(commands[1]);
+								}
 							}
 						}
 					}

@@ -1,5 +1,5 @@
 #include "StringUtility.h"
-using namespace std; 
+using namespace std;
 void IndicesOf(const string& str, const string& sign, vector<int>& v)
 {
 	v.clear();
@@ -79,7 +79,7 @@ void CutToLine(const std::string& str, std::vector<std::string>& lines)
 		{
 			if (str[i] == '\n' || (str[i] == '\r' && i < str.length() - 1 && str[i + 1] == '\n'))
 			{
-				if(!buffer.empty())
+				if (!buffer.empty())
 					lines.push_back(buffer);
 				buffer.clear();
 			}
@@ -88,6 +88,8 @@ void CutToLine(const std::string& str, std::vector<std::string>& lines)
 	if (!buffer.empty())
 		lines.push_back(buffer);
 }
+
+
 
 void ReadLines(std::ifstream& ifs, std::vector<std::string>& lines)
 {
@@ -213,30 +215,6 @@ void GetDataFromBrackets(const std::string& str, std::string& result)
 	}
 }
 
-int StringToInteger(const std::string& str)
-{
-	if (str.empty()) return 0;
-	if (str[0] == '-')
-	{
-		int value = 0;
-		for (int i = 1; i < str.length(); ++i)
-		{
-			value *= 10;
-			value += (int)str[i] - 48;
-		}
-		return value * -1;
-	}
-	else
-	{
-		int value = 0;
-		for (int i = 0; i < str.length(); ++i)
-		{
-			value *= 10;
-			value += (int)str[i] - 48;
-		}
-		return value;
-	}
-}
 inline constexpr void mtolower(char& c)
 {
 	if ((c >= 'A') && (c <= 'Z'))
@@ -265,4 +243,54 @@ void ToUpper(std::string& str)
 	{
 		mtoupper(c[i]);
 	}
+}
+
+int64_t StringToInt(const std::string& str)
+{
+	if (str.empty()) return 0;
+	int64_t v;
+	int64_t result = 0;
+	uint start = 0;
+	if (str[0] == '-')
+	{
+		v = -1;
+		start = 1;
+	}
+	else v = 1;
+	for (; start < str.size(); ++start)
+	{
+		result = result * 10 + ((int)str[start] - 48);
+	}
+	return result * v;
+}
+
+double StringToFloat(const std::string& str)
+{
+	if (str.empty()) return 0;
+	double v;
+	double result = 0;
+	double afterPoint = 1;
+	uint start = 0;
+	if (str[0] == '-')
+	{
+		v = -1;
+		start = 1;
+	}
+	else v = 1;
+	for (; start < str.size(); ++start)
+	{
+		char cur = str[start];
+		if (cur == '.')
+		{
+			start++;
+			break;
+		}
+		result = result * 10 + ((int64_t)cur - 48);
+	}
+	for (; start < str.size(); ++start)
+	{
+		afterPoint *= 0.1;
+		result += afterPoint * (double)((int)str[start] - 48);
+	}
+	return result * v;
 }
