@@ -275,7 +275,7 @@ void CompileComputeShader(
 }
 void getFiles(string path, vector<string>& files)
 {
-	intptr_t   hFile = 0;
+	uint64_t   hFile = 0;
 	struct _finddata_t fileinfo;
 	string p;
 	if ((hFile = _findfirst(p.assign(path).append("\\*").c_str(), &fileinfo)) != -1)
@@ -360,7 +360,9 @@ int main()
 				dc->UpdateCommand();
 				cout << "Input anything to execute the command" << endl;
 				std::cin >> sonCmd;
+				cout << endl << endl << endl;
 				cmds = &dc->GetCommand();
+				if (cmds->empty()) continue;
 			}
 		EXECUTE:
 			static string temp = ".temp.cso";
@@ -381,8 +383,10 @@ int main()
 				ofs.write(outputData.data(), outputData.size());
 			}
 			remove(temp.c_str());
+			cout << endl << endl << endl;
 			cout << "Want to repeat the command again? Y for true" << endl;
 			std::cin >> sonCmd;
+			cout << endl << endl << endl;
 			if (sonCmd.length() == 1 && (sonCmd[0] == 'y' || sonCmd[0] == 'Y'))
 			{
 				goto EXECUTE;

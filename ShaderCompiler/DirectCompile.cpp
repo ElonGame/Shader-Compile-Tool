@@ -1,4 +1,5 @@
 #include "DirectCompile.h";
+#include <fstream>
 using namespace std;
 DirectCompile::DirectCompile()
 {
@@ -26,11 +27,24 @@ void DirectCompile::UpdateCommand()
 	string fileName;
 	cout << "Please Input the source shader file name: " << endl;
 	cin >> fileName;
-
+	{
+		ifstream ifs(fileName);
+		if (!ifs)
+		{
+			return;
+		}
+	}
 	Command c;
 	c.fileName = fileName;
 	cout << "Please Input the source property file name: " << endl;
 	cin >> c.propertyFileName;
+	{
+		ifstream ifs(c.propertyFileName);
+		if (!ifs)
+		{
+			return;
+		}
+	}
 	c.isDebug = isDebug;
 RE_CHOOSE_TYPE:
 	cout << "What Type of Shader is it? " << endl;
