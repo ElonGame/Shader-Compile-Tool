@@ -16,6 +16,7 @@ START:
 			mainThreadFinished = true;
 			mainThreadWaitCV.notify_all();
 		}
+
 		return;
 	}
 
@@ -64,12 +65,13 @@ public:
 	void operator()()
 	{
 		int value = (int)-1;
+		while (sys->threadShouldStop) {
+			std::unique_lock<std::mutex> lck(sys->threadMtx);
+			sys->cv.wait(lck);
+		}
+
 		while (sys->JobSystemInitialized)
 		{
-			{
-				std::unique_lock<std::mutex> lck(sys->threadMtx);
-				sys->cv.wait(lck);
-			}
 			JobNode* node = nullptr;
 			while (sys->executingNode.TryPop(&node))
 			{
@@ -87,7 +89,8 @@ public:
 					sys->UpdateNewBucket();
 				}
 			}
-
+			std::unique_lock<std::mutex> lck(sys->threadMtx);
+			sys->cv.wait(lck);
 		}
 	}
 };
@@ -147,7 +150,7 @@ JobSystem::~JobSystem() noexcept
 	}
 	for (auto ite = usedBuckets.begin(); ite != usedBuckets.end(); ++ite)
 	{
-		delete *ite;
+		delete* ite;
 	}
 }
 
@@ -159,6 +162,7 @@ void JobSystem::ExecuteBucket(JobBucket** bucket, int bucketCount)
 	buckets.resize(bucketCount);
 	memcpy(buckets.data(), bucket, sizeof(JobBucket*) * bucketCount);
 	mainThreadFinished = false;
+	threadShouldStop = false;
 	UpdateNewBucket();
 }
 void JobSystem::ExecuteBucket(JobBucket* bucket, int bucketCount)
@@ -172,6 +176,7 @@ void JobSystem::ExecuteBucket(JobBucket* bucket, int bucketCount)
 		buckets[i] = bucket + i;
 	}
 	mainThreadFinished = false;
+	threadShouldStop = false;
 	UpdateNewBucket();
 }
 
@@ -203,7 +208,7 @@ void VectorPool::Delete(std::vector<JobNode*>* targetPtr)
 		if (currentCount >= arr->capacity)
 		{
 			int64_t newCapacity = arr->capacity * 2;
-			std::vector<JobNode*>** newArray = new std::vector<JobNode*>*[newCapacity];
+			std::vector<JobNode*>** newArray = new std::vector<JobNode*> * [newCapacity];
 			memcpy(newArray, arr->objs, sizeof(std::vector<JobNode*>*) * arr->capacity);
 			delete arr->objs;
 			arr->objs = newArray;
@@ -235,7 +240,7 @@ std::vector<JobNode*>* VectorPool::New()
 VectorPool::VectorPool(unsigned int initCapacity)
 {
 	if (initCapacity < 3) initCapacity = 3;
-	unusedObjects[0].objs = new std::vector<JobNode*>*[initCapacity];
+	unusedObjects[0].objs = new std::vector<JobNode*> * [initCapacity];
 	unusedObjects[0].capacity = initCapacity;
 	unusedObjects[0].count = initCapacity / 2;
 	for (unsigned int i = 0; i < unusedObjects[0].count; ++i)
@@ -243,7 +248,7 @@ VectorPool::VectorPool(unsigned int initCapacity)
 		unusedObjects[0].objs[i] = new std::vector<JobNode*>;// (StorageT*)malloc(sizeof(StorageT));
 		unusedObjects[0].objs[i]->reserve(20);
 	}
-	unusedObjects[1].objs = new std::vector<JobNode*>*[initCapacity];
+	unusedObjects[1].objs = new std::vector<JobNode*> * [initCapacity];
 	unusedObjects[1].capacity = initCapacity;
 	unusedObjects[1].count = initCapacity / 2;
 	for (unsigned int i = 0; i < unusedObjects[1].count; ++i)

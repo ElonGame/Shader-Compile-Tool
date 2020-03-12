@@ -15,9 +15,6 @@
 #include "JobSystem/JobInclude.h"
 using namespace std;
 using namespace SCompile;
-JobSystem* jobSys_MainGlobal;
-JobBucket* jobBucket_MainGlobal;
-
 string start = "fxc.exe /nologo";
 string shaderTypeCmd = " /T ";
 string fullOptimize = " /O3";
@@ -334,21 +331,25 @@ void TryCreateDirectory(string& path)
 
 int main()
 {
-	jobSys_MainGlobal = new JobSystem(std::thread::hardware_concurrency() - 2);
-	jobBucket_MainGlobal = jobSys_MainGlobal->GetJobBucket();
+
+
 	string cmd;
 	string sonCmd;
 	string results;
 	unique_ptr<ICompileIterator> dc;
 	vector<Command>* cmds = nullptr;
-	
+
 	while (true)
 	{
-		cout << "Choose Compiling Mode: " << endl;
-		cout << "  0: Compile Single File" << endl;
-		cout << "  1: Compile Batched File" << endl;
+		cout << "Choose Compiling Mode: \n";
+		cout << "  0: Compile Single File\n";
+		cout << "  1: Compile Batched File\n";
 		std::cin >> cmd;
-		if (cmd == "exit") return 0;
+		if (cmd == "exit")
+		{
+
+			return 0;
+		}
 		else if (cmd.size() == 1) {
 			if (cmd[0] == '0')
 			{
@@ -364,18 +365,23 @@ int main()
 			if (dc)
 			{
 				dc->UpdateCommand();
-				cout << "Input anything to execute the command" << endl;
+				cout << "Input anything to execute the command\n";
 				std::cin >> sonCmd;
-				cout << endl << endl << endl;
+				cout << "\n\n\n";
 				cmds = &dc->GetCommand();
 				if (cmds->empty()) continue;
 			}
 		EXECUTE:
-			
+
 			static string pathFolder = "CompileResult\\";
 			TryCreateDirectory(pathFolder);
 			if (cmds->size() > 1)
 			{
+				JobSystem* jobSys_MainGlobal;
+				JobBucket* jobBucket_MainGlobal;
+				jobSys_MainGlobal = new JobSystem(std::thread::hardware_concurrency());
+				jobBucket_MainGlobal = jobSys_MainGlobal->GetJobBucket();
+				
 				for (size_t a = 0; a < cmds->size(); ++a)
 				{
 					Command* i = &(*cmds)[a];
@@ -402,8 +408,11 @@ int main()
 							remove(temp.c_str());
 						}, nullptr, 0);
 				}
+				cout << endl;
 				jobSys_MainGlobal->ExecuteBucket(jobBucket_MainGlobal, 1);
 				jobSys_MainGlobal->Wait();
+				jobSys_MainGlobal->ReleaseJobBucket(jobBucket_MainGlobal);
+				delete jobSys_MainGlobal;
 			}
 			else
 			{
@@ -423,10 +432,10 @@ int main()
 				ofs.write(outputData.data(), outputData.size());
 				remove(temp.c_str());
 			}
-			cout << endl << endl << endl;
-			cout << "Want to repeat the command again? Y for true" << endl;
+			cout << "\n\n\n";
+			cout << "Want to repeat the command again? Y for true\n";
 			std::cin >> sonCmd;
-			cout << endl << endl << endl;
+			cout << "\n\n\n";
 			if (sonCmd.length() == 1 && (sonCmd[0] == 'y' || sonCmd[0] == 'Y'))
 			{
 				goto EXECUTE;
