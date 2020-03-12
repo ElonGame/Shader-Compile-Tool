@@ -10,10 +10,13 @@
 #include "BatchCompile.h"
 #include <fstream>
 #include <unordered_map>
+#include <string>
 #include "ShaderUniforms.h"
+#include "JobSystem/JobInclude.h"
 using namespace std;
 using namespace SCompile;
-
+JobSystem* jobSys_MainGlobal;
+JobBucket* jobBucket_MainGlobal;
 
 string start = "fxc.exe /nologo";
 string shaderTypeCmd = " /T ";
@@ -328,14 +331,17 @@ void TryCreateDirectory(string& path)
 		startIndex = slashIndex[i];
 	}
 }
+
 int main()
 {
+	jobSys_MainGlobal = new JobSystem(std::thread::hardware_concurrency() - 2);
+	jobBucket_MainGlobal = jobSys_MainGlobal->GetJobBucket();
 	string cmd;
 	string sonCmd;
 	string results;
 	unique_ptr<ICompileIterator> dc;
 	vector<Command>* cmds = nullptr;
-	std::vector<char> outputData;
+	
 	while (true)
 	{
 		cout << "Choose Compiling Mode: " << endl;
@@ -365,12 +371,46 @@ int main()
 				if (cmds->empty()) continue;
 			}
 		EXECUTE:
-			static string temp = ".temp.cso";
-			string pathFolder = "CompileResult\\";
+			
+			static string pathFolder = "CompileResult\\";
 			TryCreateDirectory(pathFolder);
-			for (auto i = cmds->begin(); i != cmds->end(); ++i)
+			if (cmds->size() > 1)
 			{
+				for (size_t a = 0; a < cmds->size(); ++a)
+				{
+					Command* i = &(*cmds)[a];
+					jobBucket_MainGlobal->GetTask([i]()->void
+						{
+							std::vector<char> outputData;
+							std::string temp;
+							temp.reserve(20);
+							temp += ".temp";
+							temp += std::to_string((uint64_t)i);
+							temp += ".tempCso";
+
+							uint32_t maxSize = 0;
+							if (i->isCompute)
+							{
+								CompileComputeShader(i->fileName, i->propertyFileName, temp, outputData, i->isDebug);
+							}
+							else
+							{
+								CompileShader(i->fileName, i->propertyFileName, temp, outputData, i->isDebug);
+							}
+							ofstream ofs(pathFolder + i->fileName + ".cso", ios::binary);
+							ofs.write(outputData.data(), outputData.size());
+							remove(temp.c_str());
+						}, nullptr, 0);
+				}
+				jobSys_MainGlobal->ExecuteBucket(jobBucket_MainGlobal, 1);
+				jobSys_MainGlobal->Wait();
+			}
+			else
+			{
+				std::vector<char> outputData;
+				std::string temp = ".temp.cso";
 				uint32_t maxSize = 0;
+				Command* i = &(*cmds)[0];
 				if (i->isCompute)
 				{
 					CompileComputeShader(i->fileName, i->propertyFileName, temp, outputData, i->isDebug);
@@ -381,8 +421,8 @@ int main()
 				}
 				ofstream ofs(pathFolder + i->fileName + ".cso", ios::binary);
 				ofs.write(outputData.data(), outputData.size());
+				remove(temp.c_str());
 			}
-			remove(temp.c_str());
 			cout << endl << endl << endl;
 			cout << "Want to repeat the command again? Y for true" << endl;
 			std::cin >> sonCmd;

@@ -36,6 +36,18 @@
     <ClCompile Include="BatchCompile.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="JobSystem\JobNode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="JobSystem\JobSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="JobSystem\JobBucket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="JobSystem\JobHandle.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ICompileIterator.h">
@@ -60,6 +72,69 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BatchCompile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\BitArray.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\DXMath.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Matrix3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Matrix4.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Quaternion.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Scalar.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Transform.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXMath\Vector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\MetaLib.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Pool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\RandomVector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\RingQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Runnable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\JobInclude.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\JobNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\JobSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\VectorPool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\ConcurrentQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\JobBucket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JobSystem\JobHandle.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
