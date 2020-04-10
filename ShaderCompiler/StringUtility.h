@@ -18,3 +18,4 @@ void ToLower(std::string& str);
 void ToUpper(std::string& str);
 int64_t StringToInt(const std::string& str);
 double StringToFloat(const std::string& str);
+bool StringEqual(const std::string& a, const std::string& b);

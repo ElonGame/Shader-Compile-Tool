@@ -41,8 +41,8 @@ namespace SCompile
 	D3D12_STENCIL_OP GetStencilOP(const std::string& str)
 	{
 		D3D12_STENCIL_OP op = D3D12_STENCIL_OP_KEEP;
-		if (str == "zero") op = D3D12_STENCIL_OP_ZERO;
-		else if (str == "replace") op = D3D12_STENCIL_OP_REPLACE;
+		if (StringEqual(str, "zero")) op = D3D12_STENCIL_OP_ZERO;
+		else if (StringEqual(str, "replace")) op = D3D12_STENCIL_OP_REPLACE;
 		return op;
 	}
 
@@ -153,31 +153,31 @@ namespace SCompile
 	D3D12_COMPARISON_FUNC GetComparison(const std::string& str)
 	{
 		D3D12_COMPARISON_FUNC ztest = D3D12_COMPARISON_FUNC_ALWAYS;
-		if (str == "less")
+		if (StringEqual(str, "less"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_LESS;
 		}
-		else if (str == "lequal")
+		else if (StringEqual(str, "lequal"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		}
-		else if (str == "greater")
+		else if (StringEqual(str, "greater"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_GREATER;
 		}
-		else if (str == "gequal")
+		else if (StringEqual(str, "gequal"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 		}
-		else if (str == "equal")
+		else if (StringEqual(str, "equal"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_EQUAL;
 		}
-		else if (str == "nequal")
+		else if (StringEqual(str, "nequal"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_NOT_EQUAL;
 		}
-		else if (str == "never")
+		else if (StringEqual(str, "never"))
 		{
 			ztest = D3D12_COMPARISON_FUNC_NEVER;
 		}
@@ -201,6 +201,8 @@ namespace SCompile
 		static string endPragma = "#end";
 		static string vertex = "vertex";
 		static string fragment = "fragment";
+		static string hull = "hull";
+		static string domain = "domain";
 		static string Cull = "cull";
 		static string zWrite = "zwrite";
 		static string zTest = "ztest";
@@ -285,87 +287,95 @@ namespace SCompile
 						if (commands.size() >= 2)
 						{
 							ToLower(commands[0]);
-							if (commands[0] == zTest)
+							if (StringEqual(commands[0], zTest))
 							{
 								ToLower(commands[1]);
 								ztest = GetComparison(commands[1]);
 							}
-							else if (commands[0] == zWrite)
+							else if (StringEqual(commands[0], zWrite))
 							{
 								ToLower(commands[1]);
-								if (commands[1] == "on" || commands[1] == "always")
+								if (StringEqual(commands[1] , "on") || StringEqual(commands[1] , "always"))
 								{
 									zwrite = true;
 								}
-								else if (commands[1] == "off" || commands[1] == "never")
+								else if (StringEqual(commands[1] , "off") || StringEqual(commands[1] , "never"))
 								{
 									zwrite = false;
 								}
 							}
-							else if (commands[0] == Cull)
+							else if (StringEqual(commands[0], Cull))
 							{
 								ToLower(commands[1]);
-								if (commands[1] == "back")
+								if (StringEqual(commands[1] , "back"))
 								{
 									cullmode = D3D12_CULL_MODE_BACK;
 								}
-								else if (commands[1] == "front")
+								else if (StringEqual(commands[1] , "front"))
 								{
 									cullmode = D3D12_CULL_MODE_FRONT;
 								}
-								else if (commands[1] == "off" || commands[1] == "never")
+								else if (StringEqual(commands[1] , "off") || StringEqual(commands[1] , "never"))
 								{
 									cullmode = D3D12_CULL_MODE_NONE;
 								}
 							}
-							else if (commands[0] == vertex)
+							else if (StringEqual(commands[0], vertex))
 							{
 								p.vertex = commands[1];
 							}
-							else if (commands[0] == fragment)
+							else if (StringEqual(commands[0], fragment))
 							{
 								p.fragment = commands[1];
 							}
-							else if (commands[0] == conservative)
+							else if (StringEqual(commands[0], hull))
+							{
+								p.hull = commands[1];
+							}
+							else if (StringEqual(commands[0], domain))
+							{
+								p.domain = commands[1];
+							}
+							else if (StringEqual(commands[0], conservative))
 							{
 								ToLower(commands[1]);
-								if (commands[1] == "on" || commands[1] == "always")
+								if (StringEqual(commands[1] , "on") || StringEqual(commands[1] , "always"))
 									conservativeMode = true;
-								else if (commands[1] == "off" || commands[1] == "never")
+								else if (StringEqual(commands[1] , "off") || StringEqual(commands[1] , "never"))
 									conservativeMode = false;
 							}
-							else if (commands[0] == blend)
+							else if (StringEqual(commands[0], blend))
 							{
 								ToLower(commands[1]);
-								if (commands[1] == "on" || commands[1] == "always")
+								if (StringEqual(commands[1] , "on") || StringEqual(commands[1] , "always"))
 									alpha = true;
-								else if (commands[1] == "off" || commands[1] == "never")
+								else if (StringEqual(commands[1] , "off" )|| StringEqual(commands[1] , "never"))
 									alpha = false;
 							}
 							else if (GetFirstIndexOf(commands[0], "stencil_") == 0)
 							{
 								ToLower(commands[1]);
-								if (commands[0] == stencilreadmask)
+								if (StringEqual(commands[0], stencilreadmask))
 								{
 									readmask = (uint8_t)StringToInt(commands[1]);
 								}
-								else if (commands[0] == stencilwritemask)
+								else if (StringEqual(commands[0], stencilwritemask))
 								{
 									writemask = (uint8_t)StringToInt(commands[1]);
 								}
-								else if (commands[0] == stencilcomp)
+								else if (StringEqual(commands[0], stencilcomp))
 								{
 									sComp = GetComparison(commands[1]);
 								}
-								else if (commands[0] == stencilZFail)
+								else if (StringEqual(commands[0], stencilZFail))
 								{
 									zFail = GetStencilOP(commands[1]);
 								}
-								else if (commands[0] == stencilFail)
+								else if (StringEqual(commands[0], stencilFail))
 								{
 									sFail = GetStencilOP(commands[1]);
 								}
-								else if (commands[0] == stencilpass)
+								else if (StringEqual(commands[0], stencilpass))
 								{
 									pass = GetStencilOP(commands[1]);
 								}

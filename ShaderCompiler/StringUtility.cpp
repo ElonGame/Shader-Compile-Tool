@@ -294,3 +294,50 @@ double StringToFloat(const std::string& str)
 	}
 	return result * v;
 }
+
+bool StringEqual(const std::string& a, const std::string& b)
+{
+	char* aPtr = ((std::string&)a).data();
+	char* bPtr = ((std::string&)b).data();
+	if (a.length() != b.length()) return false;
+	size_t fullLen = a.length();
+	if (fullLen >= sizeof(uint64_t) * 2)
+	{
+		size_t longSize = fullLen / sizeof(uint64_t);
+		uint64_t* longAPtr = (uint64_t*)aPtr;
+		uint64_t* longBPtr = (uint64_t*)bPtr;
+		uint64_t* end = longAPtr + longSize;
+		for (; longAPtr != end; longAPtr++)
+		{
+			if (*longAPtr != *longBPtr) return false;
+			longBPtr++;
+		}
+		char* aChar = (char*)longAPtr;
+		char* bChar = (char*)longBPtr;
+		size_t charSize = fullLen % sizeof(uint64_t);
+		for (uint i = 0; i < charSize; ++i)
+		{
+			if (aChar[i] != bChar[i]) return false;
+		}
+	}
+	else
+	{
+		size_t longSize = fullLen / sizeof(uint32_t);
+		uint32_t* longAPtr = (uint32_t*)aPtr;
+		uint32_t* longBPtr = (uint32_t*)bPtr;
+		uint32_t* end = longAPtr + longSize;
+		for (; longAPtr != end; longAPtr++)
+		{
+			if (*longAPtr != *longBPtr) return false;
+			longBPtr++;
+		}
+		char* aChar = (char*)longAPtr;
+		char* bChar = (char*)longBPtr;
+		size_t charSize = fullLen % sizeof(uint32_t);
+		for (uint i = 0; i < charSize; ++i)
+		{
+			if (aChar[i] != bChar[i]) return false;
+		}
+	}
+	return true;
+}

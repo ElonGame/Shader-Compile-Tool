@@ -70,6 +70,8 @@ namespace SCompile {
 		std::string name;
 		std::string vertex;
 		std::string fragment;
+		std::string hull;
+		std::string domain;
 		D3D12_RASTERIZER_DESC rasterizeState;
 		D3D12_DEPTH_STENCIL_DESC depthStencilState;
 		D3D12_BLEND_DESC blendState;

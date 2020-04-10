@@ -15,50 +15,55 @@
 #include "JobSystem/JobInclude.h"
 using namespace std;
 using namespace SCompile;
-string start = "fxc.exe /nologo";
+string start = " /nologo";
 string shaderTypeCmd = " /T ";
 string fullOptimize = " /O3";
 string noOptimize = " /Od";
 string debuging = " /Zi";
 string funcName = " /E ";
 string output = " /Fo ";
-void GenerateReleaseCommand(
-	const string& fileName,
-	const string& functionName,
-	const string& resultFileName,
-	ShaderType shaderType,
-	string& cmdResult
-) {
-	string shaderTypeName;
-	switch (shaderType)
+string dxcversion;
+string dxcpath;
+string fxcversion;
+string fxcpath;
+void InitRegisteData()
+{
+	ifstream ifs("DXC\\register.txt");
+	if (!ifs)
 	{
-	case ShaderType::ComputeShader:
-		shaderTypeName = "cs_5_1";
-		break;
-	case ShaderType::VertexShader:
-		shaderTypeName = "vs_5_1";
-		break;
-	case ShaderType::HullShader:
-		shaderTypeName = "hs_5_1";
-		break;
-	case ShaderType::DomainShader:
-		shaderTypeName = "ds_5_1";
-		break;
-	case ShaderType::GeometryShader:
-		shaderTypeName = "gs_5_1";
-		break;
-	case ShaderType::PixelShader:
-		shaderTypeName = "ps_5_1";
-		break;
-	default:
-		shaderTypeName = " ";
-		break;
+		cout << "Register.txt not found in DXC folder!" << endl;
+		system("pause");
+		exit(0);
 	}
-	cmdResult.clear();
-	cmdResult.reserve(50);
-	cmdResult += start + shaderTypeCmd + shaderTypeName + fullOptimize + funcName + functionName + output + '\"' + resultFileName + '\"' + " " + '\"' + fileName + '\"';
+	vector<string> lines;
+	ReadLines(ifs, lines);
+	vector<string> splitResult;
+	for (auto ite = lines.begin(); ite != lines.end(); ++ite)
+	{
+		Split(*ite, ':', splitResult);
+		if (splitResult.size() == 2)
+		{
+			ToUpper(splitResult[0]);
+			if (splitResult[0] == "DXCSM")
+			{
+				dxcversion = splitResult[1];
+			}
+			else if (splitResult[0] == "DXCPATH")
+			{
+				dxcpath = "DXC\\" + splitResult[1];
+			}
+			else if (splitResult[0] == "FXCSM")
+			{
+				fxcversion = splitResult[1];
+			}
+			else if (splitResult[0] == "FXCPATH")
+			{
+				fxcpath = "DXC\\" + splitResult[1];
+			}
+		}
+	}
 }
-void GenerateDebugCommand(
+void GenerateDXCCommand(
 	const string& fileName,
 	const string& functionName,
 	const string& resultFileName,
@@ -69,30 +74,68 @@ void GenerateDebugCommand(
 	switch (shaderType)
 	{
 	case ShaderType::ComputeShader:
-		shaderTypeName = "cs_5_1";
+		shaderTypeName = "cs_";
 		break;
 	case ShaderType::VertexShader:
-		shaderTypeName = "vs_5_1";
+		shaderTypeName = "vs_";
 		break;
 	case ShaderType::HullShader:
-		shaderTypeName = "hs_5_1";
+		shaderTypeName = "hs_";
 		break;
 	case ShaderType::DomainShader:
-		shaderTypeName = "ds_5_1";
+		shaderTypeName = "ds_";
 		break;
 	case ShaderType::GeometryShader:
-		shaderTypeName = "gs_5_1";
+		shaderTypeName = "gs_";
 		break;
 	case ShaderType::PixelShader:
-		shaderTypeName = "ps_5_1";
+		shaderTypeName = "ps_";
 		break;
 	default:
 		shaderTypeName = " ";
 		break;
 	}
+	shaderTypeName += dxcversion;
 	cmdResult.clear();
 	cmdResult.reserve(50);
-	cmdResult += start + shaderTypeCmd + shaderTypeName + debuging + noOptimize + funcName + functionName + output + '\"' + resultFileName + '\"' + " " + '\"' + fileName + '\"';
+	cmdResult += dxcpath + start + shaderTypeCmd + shaderTypeName + fullOptimize + funcName + functionName + output + '\"' + resultFileName + '\"' + " " + '\"' + fileName + '\"';
+}
+void GenerateFXCCommand(
+	const string& fileName,
+	const string& functionName,
+	const string& resultFileName,
+	ShaderType shaderType,
+	string& cmdResult
+) {
+	string shaderTypeName;
+	switch (shaderType)
+	{
+	case ShaderType::ComputeShader:
+		shaderTypeName = "cs_";
+		break;
+	case ShaderType::VertexShader:
+		shaderTypeName = "vs_";
+		break;
+	case ShaderType::HullShader:
+		shaderTypeName = "hs_";
+		break;
+	case ShaderType::DomainShader:
+		shaderTypeName = "ds_";
+		break;
+	case ShaderType::GeometryShader:
+		shaderTypeName = "gs_";
+		break;
+	case ShaderType::PixelShader:
+		shaderTypeName = "ps_";
+		break;
+	default:
+		shaderTypeName = " ";
+		break;
+	}
+	shaderTypeName += fxcversion;
+	cmdResult.clear();
+	cmdResult.reserve(50);
+	cmdResult += fxcpath + start + shaderTypeCmd + shaderTypeName + fullOptimize + funcName + functionName + output + '\"' + resultFileName + '\"' + " " + '\"' + fileName + '\"';
 }
 
 template <typename T>
@@ -125,11 +168,7 @@ void DragData<string>(ifstream& ifs, string& str)
 	str.resize(length);
 	ifs.read(str.data(), length);
 }
-struct PassCommand
-{
-	string vertexCommand;
-	string fragmentCommand;
-};
+
 void CompileShader(
 	const string& fileName,
 	const string& propertyPath,
@@ -173,6 +212,7 @@ void CompileShader(
 	{
 		auto findFunc = [&](const std::string& name, ShaderType type)->void
 		{
+			if (name.empty()) return;
 			auto ite = passMap.find(name);
 			if (ite == passMap.end())
 			{
@@ -180,6 +220,8 @@ void CompileShader(
 			}
 		};
 		findFunc(i->vertex, ShaderType::VertexShader);
+		findFunc(i->hull, ShaderType::HullShader);
+		findFunc(i->domain, ShaderType::DomainShader);
 		findFunc(i->fragment, ShaderType::PixelShader);
 	}
 	std::vector<std::pair<std::string, ShaderType>> functionNames(passMap.size());
@@ -194,12 +236,12 @@ void CompileShader(
 		uint64_t fileSize = 0;
 		if (isDebug)
 		{
-			GenerateDebugCommand(
+			GenerateFXCCommand(
 				fileName, functionNames[i].first, tempFilePath, functionNames[i].second, commandCache);
 		}
 		else
 		{
-			GenerateReleaseCommand(
+			GenerateDXCCommand(
 				fileName, functionNames[i].first, tempFilePath, functionNames[i].second, commandCache);
 		}
 		cout << commandCache << endl;
@@ -212,8 +254,17 @@ void CompileShader(
 		PutIn(resultData, i->rasterizeState);
 		PutIn(resultData, i->depthStencilState);
 		PutIn(resultData, i->blendState);
-		PutIn<uint>(resultData, passMap[i->vertex].second);
-		PutIn<uint>(resultData, passMap[i->fragment].second);
+		auto PutInFunc = [&](const std::string& value)->void
+		{
+			if (value.empty() || passMap.find(value) == passMap.end())
+				PutIn<int>(resultData, -1);
+			else
+				PutIn<int>(resultData, (int)passMap[value].second);
+		};
+		PutInFunc(i->vertex);
+		PutInFunc(i->hull);
+		PutInFunc(i->domain);
+		PutInFunc(i->fragment);
 	}
 
 }
@@ -261,12 +312,12 @@ void CompileComputeShader(
 		string kernelCommand;
 		if (isDebug)
 		{
-			GenerateDebugCommand(
+			GenerateFXCCommand(
 				fileName, *i, tempFilePath, ShaderType::ComputeShader, kernelCommand);
 		}
 		else
 		{
-			GenerateReleaseCommand(
+			GenerateDXCCommand(
 				fileName, *i, tempFilePath, ShaderType::ComputeShader, kernelCommand);
 		}
 		cout << kernelCommand << endl;
@@ -331,26 +382,24 @@ void TryCreateDirectory(string& path)
 
 int main()
 {
-
-
 	string cmd;
 	string sonCmd;
 	string results;
 	unique_ptr<ICompileIterator> dc;
 	vector<Command>* cmds = nullptr;
-
 	while (true)
 	{
 		cout << "Choose Compiling Mode: \n";
 		cout << "  0: Compile Single File\n";
 		cout << "  1: Compile Batched File\n";
 		std::cin >> cmd;
-		if (cmd == "exit")
+		if (StringEqual(cmd, "exit"))
 		{
 
 			return 0;
 		}
 		else if (cmd.size() == 1) {
+
 			if (cmd[0] == '0')
 			{
 				dc = std::unique_ptr<ICompileIterator>(new DirectCompile());
@@ -372,7 +421,7 @@ int main()
 				if (cmds->empty()) continue;
 			}
 		EXECUTE:
-
+			InitRegisteData();
 			static string pathFolder = "CompileResult\\";
 			TryCreateDirectory(pathFolder);
 			if (cmds->size() > 1)

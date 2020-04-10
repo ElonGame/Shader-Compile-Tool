@@ -4,7 +4,7 @@ using namespace std;
 DirectCompile::DirectCompile()
 {
 RE_CHOOSE:
-	cout << "Release Or Debug? Y for Release & N for Debug" << endl;
+	cout << "DXC Or FXC? Y for DXC & N for FXC" << endl;
 	string s;
 	cin >> s;
 	if (s.size() != 1 || ((s[0] != 'Y') && s[0] != 'N' && s[0] != 'y' && s[0] != 'n'))
