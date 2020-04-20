@@ -13,6 +13,7 @@
 #include <string>
 #include "ShaderUniforms.h"
 #include "JobSystem/JobInclude.h"
+#include <atomic>
 using namespace std;
 using namespace SCompile;
 string start = " /nologo";
@@ -424,6 +425,7 @@ int main()
 			InitRegisteData();
 			static string pathFolder = "CompileResult\\";
 			TryCreateDirectory(pathFolder);
+			atomic<uint64_t> counter = 0;
 			if (cmds->size() > 1)
 			{
 				JobSystem* jobSys_MainGlobal;
@@ -434,13 +436,14 @@ int main()
 				for (size_t a = 0; a < cmds->size(); ++a)
 				{
 					Command* i = &(*cmds)[a];
-					jobBucket_MainGlobal->GetTask([i]()->void
+					jobBucket_MainGlobal->GetTask([i, &counter]()->void
 						{
 							std::vector<char> outputData;
 							std::string temp;
 							temp.reserve(20);
 							temp += ".temp";
-							temp += std::to_string((uint64_t)i);
+							uint64_t tempNameIndex = ++counter;
+							temp += std::to_string((uint64_t)tempNameIndex);
 							temp += ".tempCso";
 
 							uint32_t maxSize = 0;
