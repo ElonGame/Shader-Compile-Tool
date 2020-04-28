@@ -21,7 +21,7 @@ void BatchCompile::UpdateCommand()
 {
 	cout << "Please input batch look-up file: " << endl;
 	cin >> lookUpFilePath;
-	
+
 }
 std::vector<Command>& BatchCompile::GetCommand()
 {
@@ -41,20 +41,20 @@ std::vector<Command>& BatchCompile::GetCommand()
 	for (auto i = inputLines.begin(); i != inputLines.end(); ++i)
 	{
 		string& s = *i;
-		Split(s, ' ', splitedCommands);
-		if (splitedCommands.size() != 3)
-			continue;
-		if (splitedCommands[0] == "compute")
-		{
-			c.isCompute = true;
-
-		}
-		else if (splitedCommands[0] == "shader")
+		std::ifstream vsIfs(s + ".hlsl");
+		std::ifstream csIfs(s + ".compute");
+		if (vsIfs)
 		{
 			c.isCompute = false;
+			c.fileName = s + ".hlsl";
 		}
-		c.fileName = splitedCommands[1];
-		c.propertyFileName = splitedCommands[2];
+		else if (csIfs)
+		{
+			c.isCompute = true;
+			c.fileName = s + ".compute";
+		}
+		else continue;
+		c.propertyFileName = s + ".prop";
 		commands.push_back(c);
 	}
 	return commands;

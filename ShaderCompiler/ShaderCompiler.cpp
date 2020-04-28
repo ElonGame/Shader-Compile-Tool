@@ -415,8 +415,6 @@ int main()
 			if (dc)
 			{
 				dc->UpdateCommand();
-				cout << "Input anything to execute the command\n";
-				std::cin >> sonCmd;
 				cout << "\n\n\n";
 				cmds = &dc->GetCommand();
 				if (cmds->empty()) continue;
