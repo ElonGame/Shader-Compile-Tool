@@ -14,13 +14,91 @@
 #include "ShaderUniforms.h"
 #include "JobSystem/JobInclude.h"
 #include <atomic>
+#include <windows.h> 
+#include <tchar.h>
+#include <strsafe.h>
+
 using namespace std;
 using namespace SCompile;
-string start = " /nologo";
+
+static bool g_needCommandOutput = true;
+
+void CreateChildProcess(const std::string& cmd)
+// Create a child process that uses the previously created pipes for STDIN and STDOUT.
+{
+	if (g_needCommandOutput)
+	{
+		cout << cmd << endl;
+		system(cmd.c_str());
+		return;
+	}
+	HANDLE g_hChildStd_IN_Rd = NULL;
+	HANDLE g_hChildStd_IN_Wr = NULL;
+	HANDLE g_hChildStd_OUT_Rd = NULL;
+	HANDLE g_hChildStd_OUT_Wr = NULL;
+	PROCESS_INFORMATION piProcInfo;
+
+	static HANDLE g_hInputFile = NULL;
+	std::wstring ws;
+	ws.resize(cmd.length());
+	for (uint i = 0; i < cmd.length(); ++i)
+	{
+		ws[i] = cmd[i];
+	}
+
+	//PROCESS_INFORMATION piProcInfo;
+	STARTUPINFO siStartInfo;
+	BOOL bSuccess = FALSE;
+
+	// Set up members of the PROCESS_INFORMATION structure. 
+
+	ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+	// Set up members of the STARTUPINFO structure. 
+	// This structure specifies the STDIN and STDOUT handles for redirection.
+
+	ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+	siStartInfo.cb = sizeof(STARTUPINFO);
+	siStartInfo.hStdError = g_hChildStd_OUT_Wr;
+	siStartInfo.hStdOutput = g_hChildStd_OUT_Wr;
+	siStartInfo.hStdInput = g_hChildStd_IN_Rd;
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+	// Create the child process. 
+
+	bSuccess = CreateProcess(NULL,
+		ws.data(),     // command line 
+		NULL,          // process security attributes 
+		NULL,          // primary thread security attributes 
+		TRUE,          // handles are inherited 
+		0,             // creation flags 
+		NULL,          // use parent's environment 
+		NULL,          // use parent's current directory 
+		&siStartInfo,  // STARTUPINFO pointer 
+		&piProcInfo);  // receives PROCESS_INFORMATION 
+
+	 // If an error occurs, exit the application. 
+	if (bSuccess)
+	{
+		// Close handles to the child process and its primary thread.
+		// Some applications might keep these handles to monitor the status
+		// of the child process, for example. 
+		WaitForSingleObject(piProcInfo.hProcess, INFINITE);
+		WaitForSingleObject(piProcInfo.hThread, INFINITE);
+		CloseHandle(piProcInfo.hProcess);
+		CloseHandle(piProcInfo.hThread);
+		// Close handles to the stdin and stdout pipes no longer needed by the child process.
+		// If they are not explicitly closed, there is no way to recognize that the child process has ended.
+
+		CloseHandle(g_hChildStd_OUT_Wr);
+		CloseHandle(g_hChildStd_IN_Rd);
+	}
+}
+
+
+string start = " /nologo /enable_unbounded_descriptor_tables";
 string shaderTypeCmd = " /T ";
 string fullOptimize = " /O3";
-string noOptimize = " /Od";
-string debuging = " /Zi";
 string funcName = " /E ";
 string output = " /Fo ";
 string dxcversion;
@@ -194,7 +272,9 @@ void CompileShader(
 	}
 	auto func = [&](const string& command, uint64_t& fileSize)->void
 	{
-		system(command.c_str());
+		//TODO
+		CreateChildProcess(command);
+		//system(command.c_str());
 		fileSize = 0;
 		ifstream ifs(tempFilePath, ios::binary);
 		if (!ifs) return;
@@ -245,7 +325,6 @@ void CompileShader(
 			GenerateDXCCommand(
 				fileName, functionNames[i].first, tempFilePath, functionNames[i].second, commandCache);
 		}
-		cout << commandCache << endl;
 		func(commandCache, fileSize);
 	}
 
@@ -293,7 +372,8 @@ void CompileComputeShader(
 	}
 	auto func = [&](const string& command, uint64_t& fileSize)->void
 	{
-		system(command.c_str());
+		CreateChildProcess(command);
+		//system(command.c_str());
 		fileSize = 0;
 		ifstream ifs(tempFilePath, ios::binary);
 		if (!ifs) return;
@@ -321,7 +401,6 @@ void CompileComputeShader(
 			GenerateDXCCommand(
 				fileName, *i, tempFilePath, ShaderType::ComputeShader, kernelCommand);
 		}
-		cout << kernelCommand << endl;
 		func(kernelCommand, fileSize);
 	}
 }
@@ -383,6 +462,7 @@ void TryCreateDirectory(string& path)
 
 int main()
 {
+	system("@echo off");
 	string cmd;
 	string sonCmd;
 	string results;
@@ -426,11 +506,12 @@ int main()
 			atomic<uint64_t> counter = 0;
 			if (cmds->size() > 1)
 			{
+				g_needCommandOutput = false;
 				JobSystem* jobSys_MainGlobal;
 				JobBucket* jobBucket_MainGlobal;
 				jobSys_MainGlobal = new JobSystem(std::thread::hardware_concurrency());
 				jobBucket_MainGlobal = jobSys_MainGlobal->GetJobBucket();
-				
+
 				for (size_t a = 0; a < cmds->size(); ++a)
 				{
 					Command* i = &(*cmds)[a];
@@ -459,6 +540,7 @@ int main()
 						}, nullptr, 0);
 				}
 				cout << endl;
+
 				jobSys_MainGlobal->ExecuteBucket(jobBucket_MainGlobal, 1);
 				jobSys_MainGlobal->Wait();
 				jobSys_MainGlobal->ReleaseJobBucket(jobBucket_MainGlobal);
@@ -466,6 +548,7 @@ int main()
 			}
 			else
 			{
+				g_needCommandOutput = true;
 				std::vector<char> outputData;
 				std::string temp = ".temp.cso";
 				uint32_t maxSize = 0;
